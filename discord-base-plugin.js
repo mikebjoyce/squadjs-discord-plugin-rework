@@ -49,8 +49,14 @@ export default class DiscordBasePlugin extends BasePlugin {
       await this.channel.send(message);
     } catch (error) {
       if (error.status === 429) {
-        this.verbose(1, 'Rate limit hit, attempting retry in 2 seconds...');
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        let waitTime = 2000;
+        if (error.retryAfter) {
+          waitTime = error.retryAfter;
+        } else if (error.headers && error.headers['retry-after']) {
+          waitTime = parseFloat(error.headers['retry-after']) * 1000;
+        }
+        this.verbose(1, `Rate limit hit, attempting retry in ${waitTime}ms...`);
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
         try {
           await this.channel.send(message);
         } catch (retryError) {

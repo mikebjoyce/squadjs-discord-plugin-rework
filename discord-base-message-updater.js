@@ -37,6 +37,7 @@ export default class DiscordBaseMessageUpdater extends BasePlugin {
     super(server, options, connectors);
 
     this.messageCache = new Map();
+    this.stats = { updatesSent: 0, updatesSkipped: 0 };
 
     // Setup model to store subscribed messages.
     this.SubscribedMessage = this.options.messageStore.define(
@@ -50,6 +51,22 @@ export default class DiscordBaseMessageUpdater extends BasePlugin {
 
   async prepareToMount() {
     await this.SubscribedMessage.sync();
+
+    const subscribedMessages = await this.SubscribedMessage.findAll({
+      where: { server: this.server.id }
+    });
+
+    for (const subscribedMessage of subscribedMessages) {
+      try {
+        await this.options.discordClient.channels
+          .fetch(subscribedMessage.channelID)
+          .then((c) => c.messages.fetch(subscribedMessage.messageID));
+      } catch (error) {
+        if (error.code === 10008) {
+          await subscribedMessage.destroy();
+        }
+      }
+    }
   }
 
   async mount() {
@@ -73,6 +90,9 @@ export default class DiscordBaseMessageUpdater extends BasePlugin {
     }
 
     this.options.discordClient.on('messageCreate', this.onDiscordMessage);
+    this.options.discordClient.on('rateLimit', (info) => {
+      this.verbose(1, 'Discord Rate Limit Hit:', info);
+    });
   }
 
   async unmount() {
@@ -183,6 +203,7 @@ export default class DiscordBaseMessageUpdater extends BasePlugin {
       try {
         this.verbose(1, `Updating message (Channel ID: ${channelID}, Message ID: ${messageID})...`);
         await message.edit(generatedMessage);
+        this.stats.updatesSent++;
         this.verbose(1, `Updated message (Channel ID: ${channelID}, Message ID: ${messageID}).`);
       } catch (err) {
         if (err.code === 10008) {

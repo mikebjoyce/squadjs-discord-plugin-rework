@@ -39,6 +39,7 @@ export default class DiscordServerStatus extends DiscordBaseMessageUpdater {
 
     this.updateMessages = this.updateMessages.bind(this);
     this.updateStatus = this.updateStatus.bind(this);
+    this.updateCount = 0;
   }
 
   async mount() {
@@ -142,13 +143,23 @@ export default class DiscordServerStatus extends DiscordBaseMessageUpdater {
     }
     const cacheString = JSON.stringify(comparisonObject);
 
-    if (this.lastCacheString === cacheString) return;
+    if (this.lastCacheString === cacheString) {
+      this.stats.updatesSkipped++;
+      return;
+    }
 
     this.lastCacheString = cacheString;
     await super.updateMessages();
   }
 
   async updateStatus() {
+    this.updateCount++;
+    if (this.updateCount % 10 === 0) {
+      this.verbose(
+        1,
+        `Telemetry Summary: ${this.stats.updatesSent} edits sent, ${this.stats.updatesSkipped} edits skipped due to no change.`
+      );
+    }
     if (!this.options.setBotStatus) return;
 
     await this.options.discordClient.user.setActivity(
