@@ -15,6 +15,11 @@ export default class DiscordBasePlugin extends BasePlugin {
   }
 
   async prepareToMount() {
+    if (!this.options.channelID) {
+      this.verbose(1, 'Channel ID not provided. Skipping channel fetch.');
+      return;
+    }
+
     try {
       this.channel = await this.options.discordClient.channels.fetch(this.options.channelID);
     } catch (error) {
@@ -40,6 +45,20 @@ export default class DiscordBasePlugin extends BasePlugin {
       message = { ...message, embeds: [message.embed] };
     }
 
-    await this.channel.send(message);
+    try {
+      await this.channel.send(message);
+    } catch (error) {
+      if (error.status === 429) {
+        this.verbose(1, 'Rate limit hit, attempting retry in 2 seconds...');
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        try {
+          await this.channel.send(message);
+        } catch (retryError) {
+          this.verbose(1, `Failed to send Discord message after retry: ${retryError.message}`, retryError);
+        }
+      } else {
+        this.verbose(1, `Failed to send Discord message: ${error.message}`, error);
+      }
+    }
   }
 }

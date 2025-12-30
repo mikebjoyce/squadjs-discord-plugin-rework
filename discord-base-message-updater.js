@@ -36,6 +36,8 @@ export default class DiscordBaseMessageUpdater extends BasePlugin {
   constructor(server, options, connectors) {
     super(server, options, connectors);
 
+    this.messageCache = new Map();
+
     // Setup model to store subscribed messages.
     this.SubscribedMessage = this.options.messageStore.define(
       `${this.constructor.name}_SubscribedMessage`,
@@ -51,6 +53,25 @@ export default class DiscordBaseMessageUpdater extends BasePlugin {
   }
 
   async mount() {
+    const subscribedMessages = await this.SubscribedMessage.findAll({
+      where: { server: this.server.id }
+    });
+
+    for (const subscribedMessage of subscribedMessages) {
+      const { channelID, messageID } = subscribedMessage;
+      try {
+        const channel = await this.options.discordClient.channels.fetch(channelID);
+        const message = await channel.messages.fetch(messageID);
+        this.messageCache.set(`${channelID}:${messageID}`, message);
+      } catch (err) {
+        this.verbose(
+          1,
+          `Could not fetch message (Channel ID: ${channelID}, Message ID: ${messageID}) for cache: `,
+          err
+        );
+      }
+    }
+
     this.options.discordClient.on('messageCreate', this.onDiscordMessage);
   }
 
@@ -104,6 +125,8 @@ export default class DiscordBaseMessageUpdater extends BasePlugin {
       const newChannelID = newMessage.channel.id;
       const newMessageID = newMessage.id;
 
+      this.messageCache.set(`${newChannelID}:${newMessageID}`, newMessage);
+
       this.verbose(
         1,
         `Subscribing message (Channel ID: ${newChannelID}, Message ID: ${newMessageID}) to automated updates...`
@@ -127,6 +150,7 @@ export default class DiscordBaseMessageUpdater extends BasePlugin {
         1,
         `Unsubscribing message (Channel ID: ${channelID}, Message ID: ${messageID}) from automated updates...`
       );
+      this.messageCache.delete(`${channelID}:${messageID}`);
       await this.SubscribedMessage.destroy({
         where: {
           channelID: channelID,
@@ -150,21 +174,13 @@ export default class DiscordBaseMessageUpdater extends BasePlugin {
     // Generate the new message.
     const generatedMessage = await this.generateMessage();
 
-    // Get subscribed messages.
-    const subscribedMessages = await this.SubscribedMessage.findAll({
-      where: { server: this.server.id }
-    });
-
     // Update each message.
-    this.verbose(1, `Updating ${subscribedMessages.length} messages...`);
-    for (const subscribedMessage of subscribedMessages) {
-      const { channelID, messageID } = subscribedMessage;
+    this.verbose(1, `Updating ${this.messageCache.size} messages...`);
+    for (const [key, message] of this.messageCache) {
+      const { channel, id: messageID } = message;
+      const channelID = channel.id;
 
       try {
-        this.verbose(1, `Getting message (Channel ID: ${channelID}, Message ID: ${messageID})...`);
-        const channel = await this.options.discordClient.channels.fetch(channelID);
-        const message = await channel.messages.fetch(messageID);
-
         this.verbose(1, `Updating message (Channel ID: ${channelID}, Message ID: ${messageID})...`);
         await message.edit(generatedMessage);
         this.verbose(1, `Updated message (Channel ID: ${channelID}, Message ID: ${messageID}).`);
@@ -174,11 +190,18 @@ export default class DiscordBaseMessageUpdater extends BasePlugin {
             1,
             `Message (Channel ID: ${channelID}, Message ID: ${messageID}) was deleted. Removing from automated updates...`
           );
-          await subscribedMessage.destroy();
+          this.messageCache.delete(key);
+          await this.SubscribedMessage.destroy({
+            where: {
+              channelID: channelID,
+              messageID: messageID,
+              server: this.server.id
+            }
+          });
         } else {
           this.verbose(
             1,
-            `Message (Channel ID: ${channelID}, Message ID: ${messageID}) could not be updated: `,
+            `Message (Channel ID: ${channelID}, Message ID: ${messageID}) could not be updated: ${err.message}`,
             err
           );
         }

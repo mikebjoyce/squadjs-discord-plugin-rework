@@ -24,7 +24,7 @@ export default class DiscordServerStatus extends DiscordBaseMessageUpdater {
       updateInterval: {
         required: false,
         description: 'How frequently to update the time in Discord.',
-        default: 60 * 1000
+        default: 2 * 60 * 1000 // 2 minutes
       },
       setBotStatus: {
         required: false,
@@ -43,14 +43,24 @@ export default class DiscordServerStatus extends DiscordBaseMessageUpdater {
 
   async mount() {
     await super.mount();
+    if (this.options.updateInterval < 2 * 60 * 1000 ) //2 minutes
+      this.verbose(1, 'Update interval is less than 2 minutes. This may cause rate limits.');
+
     this.updateInterval = setInterval(this.updateMessages, this.options.updateInterval);
     this.updateStatusInterval = setInterval(this.updateStatus, this.options.updateInterval);
+
+    this.rateLimitListener = (data) => {
+      this.verbose(1, 'Discord API Rate Limit Hit:', data);
+    };
+    this.options.discordClient.on('rateLimit', this.rateLimitListener);
   }
 
   async unmount() {
     await super.unmount();
     clearInterval(this.updateInterval);
     clearInterval(this.updateStatusInterval);
+    if (this.rateLimitListener)
+      this.options.discordClient.removeListener('rateLimit', this.rateLimitListener);
   }
 
   async generateMessage() {
@@ -118,6 +128,24 @@ export default class DiscordServerStatus extends DiscordBaseMessageUpdater {
     };
 
     return { embeds: [embedobj] };
+  }
+
+  async updateMessages() {
+    const generatedMessage = await this.generateMessage();
+
+    const comparisonObject = { ...generatedMessage };
+    if (comparisonObject.embeds) {
+      comparisonObject.embeds = comparisonObject.embeds.map((embed) => {
+        const { timestamp, ...rest } = embed;
+        return rest;
+      });
+    }
+    const cacheString = JSON.stringify(comparisonObject);
+
+    if (this.lastCacheString === cacheString) return;
+
+    this.lastCacheString = cacheString;
+    await super.updateMessages();
   }
 
   async updateStatus() {
