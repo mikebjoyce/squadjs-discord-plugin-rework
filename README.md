@@ -18,19 +18,20 @@ To further conserve API quota, DiscordServerStatus now implements a comparison c
 * **New Logic:** The plugin generates the message content and compares it against a cached string of the previous update (ignoring the timestamp field).  
 * **Benefit:** If player counts, map names, and team scores haven't changed, the plugin skips the API edit call entirely.
 
-### **3\. Decoupled Update Intervals**
+### **3. Separated Update Timers**
 
-The bot's presence (Gateway traffic) and the status message (HTTP traffic) are no longer tied to the same timer.
+The bot's presence (Gateway traffic) and the status message (HTTP traffic) now use independent timer instances.
 
-* **New Logic:** \- **Message Updates:** Default to 2-minute intervals (configurable).  
-  * **Bot Status:** Updates via a separate, slower frequency to avoid Gateway congestion.  
-* **Benefit:** Prevents "burst" traffic patterns that trigger Discord's anti-spam protections.
+* **New Logic:** 
+  - **Message Updates:** Uses `setInterval` for embed edits (default: 2 minutes)
+  - **Bot Status:** Uses separate `setInterval` for presence updates (same frequency)
+* **Benefit:** Independent timers prevent cascading failures if one operation stalls. Future configs can easily adjust frequencies separately.
 
 ### **4\. Dynamic Rate-Limiting (Gold Standard)**
 
 In `DiscordBasePlugin`, the error handling for 429s has been upgraded to be fully compliant with Discord's API standards.
 
-* **New Logic:** Instead of a static 2-second pause, the plugin now parses the `retry-after` header (or error property) to wait exactly as long as Discord requests before retrying.
+* **New Logic:** Instead of ignoring rate limits or using a fixed delay, the plugin now parses the `retry-after` header (or error property) to wait exactly as long as Discord requests before retrying.
 * **Benefit:** Maximizes throughput while strictly adhering to API limits, preventing "Global Rate Limit" bans.
 
 ### **5\. Database Self-Healing**
@@ -54,9 +55,11 @@ Visibility into the plugin's performance is now built-in.
 | **DiscordBasePlugin** | `sendDiscordMessage` | **Dynamic Rate-Limiting**: Implemented wait logic based on `retry-after` headers. |
 | **DiscordBaseMessageUpdater** | `prepareToMount` | **Self-Healing**: Added validation loop to prune dead (10008) messages. |
 | **DiscordBaseMessageUpdater** | `mount` | **Debugging**: Added `rateLimit` event listener for visibility. |
-| **DiscordBaseMessageUpdater** | `updateMessages` | **Performance**: Iterates over `messageCache` instead of querying DB/API per loop. |
+| **DiscordBaseMessageUpdater** | `updateMessages` | **Performance**: Iterates over messageCache instead of fetching channels/messages per loop.
 | **DiscordServerStatus** | `updateMessages` | **Efficiency**: Implemented `lastCacheString` JSON comparison logic. |
 | **DiscordServerStatus** | `updateStatus` | **Telemetry**: Added summary logging (Sent vs Skipped) for performance tracking. |
+
+
 
 ## **Usage Recommendations**
 
