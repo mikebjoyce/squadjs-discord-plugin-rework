@@ -1,8 +1,11 @@
 import tinygradient from 'tinygradient';
-
 import { COPYRIGHT_MESSAGE } from '../utils/constants.js';
-
 import DiscordBaseMessageUpdater from './discord-base-message-updater.js';
+
+/**
+ * SquadJS Discord Plugin - Rate-Limit Resilient
+ * @author Slacker | https://github.com/mikebjoyce/squadjs-discord-plugin-rework
+ */
 
 export default class DiscordServerStatus extends DiscordBaseMessageUpdater {
   static get description() {

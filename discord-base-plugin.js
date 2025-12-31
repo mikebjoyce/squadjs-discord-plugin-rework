@@ -1,6 +1,10 @@
 import BasePlugin from './base-plugin.js';
-
 import { COPYRIGHT_MESSAGE } from '../utils/constants.js';
+
+/**
+ * SquadJS Discord Plugin - Rate-Limit Resilient
+ * @author Slacker | https://github.com/mikebjoyce/squadjs-discord-plugin-rework
+ */
 
 export default class DiscordBasePlugin extends BasePlugin {
   static get optionsSpecification() {

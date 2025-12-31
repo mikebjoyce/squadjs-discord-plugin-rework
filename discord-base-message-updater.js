@@ -1,8 +1,11 @@
 import Sequelize from 'sequelize';
-
 import BasePlugin from './base-plugin.js';
-
 const { DataTypes } = Sequelize;
+
+/**
+ * SquadJS Discord Plugin - Rate-Limit Resilient
+ * @author Slacker | https://github.com/mikebjoyce/squadjs-discord-plugin-rework
+ */
 
 export default class DiscordBaseMessageUpdater extends BasePlugin {
   static get optionsSpecification() {
