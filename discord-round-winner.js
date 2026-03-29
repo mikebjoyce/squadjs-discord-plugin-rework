@@ -41,6 +41,10 @@ export default class DiscordRoundWinner extends DiscordBasePlugin {
   }
 
   async onNewGame(info) {
+    // Safely retrieve the name of the layer that just ended.
+    // Falls back to "an unknown layer" if the history is empty (e.g., first round after restart).
+    const finishedLayerName = this.server.layerHistory[1]?.layer?.name || "an unknown layer";
+
     this.sendDiscordMessage({
       embed: {
         title: 'Round Winner',
@@ -48,10 +52,10 @@ export default class DiscordRoundWinner extends DiscordBasePlugin {
         fields: [
           {
             name: 'Message',
-            value: `${info.winner} won on ${this.server.layerHistory[1].layer.name}.`
+            value: `${info.winner} won on ${finishedLayerName}.`
           }
         ],
-        timestamp: info.time.toISOString()
+        timestamp: (info.time || new Date()).toISOString()
       }
     });
   }
