@@ -1,5 +1,4 @@
 import Sequelize from "sequelize";
-
 import BasePlugin from "./base-plugin.js";
 
 const { DataTypes, QueryTypes } = Sequelize;
@@ -45,394 +44,127 @@ export default class DBLog extends BasePlugin {
     this.models = {};
 
     this.createModel("Server", {
-      id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      name: {
-        type: DataTypes.STRING,
-      },
+      id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      name: { type: DataTypes.STRING },
     });
 
     this.createModel("Match", {
-      id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      dlc: {
-        type: DataTypes.STRING,
-      },
-      mapClassname: {
-        type: DataTypes.STRING,
-      },
-      layerClassname: {
-        type: DataTypes.STRING,
-      },
-      map: {
-        type: DataTypes.STRING,
-      },
-      layer: {
-        type: DataTypes.STRING,
-      },
-      startTime: {
-        type: DataTypes.DATE,
-        notNull: true,
-      },
-      endTime: {
-        type: DataTypes.DATE,
-      },
-      winner: {
-        type: DataTypes.STRING,
-      },
+      id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      dlc: { type: DataTypes.STRING },
+      mapClassname: { type: DataTypes.STRING },
+      layerClassname: { type: DataTypes.STRING },
+      map: { type: DataTypes.STRING },
+      layer: { type: DataTypes.STRING },
+      startTime: { type: DataTypes.DATE, notNull: true },
+      endTime: { type: DataTypes.DATE },
+      winner: { type: DataTypes.STRING },
     });
 
     this.createModel("TickRate", {
-      id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      time: {
-        type: DataTypes.DATE,
-        notNull: true,
-      },
-      tickRate: {
-        type: DataTypes.FLOAT,
-        notNull: true,
-      },
+      id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      time: { type: DataTypes.DATE, notNull: true },
+      tickRate: { type: DataTypes.FLOAT, notNull: true },
     });
 
     this.createModel("PlayerCount", {
-      id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
+      id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
       time: {
         type: DataTypes.DATE,
         notNull: true,
         defaultValue: DataTypes.NOW,
       },
-      players: {
-        type: DataTypes.INTEGER,
-        notNull: true,
-      },
-      publicQueue: {
-        type: DataTypes.INTEGER,
-        notNull: true,
-      },
-      reserveQueue: {
-        type: DataTypes.INTEGER,
-        notNull: true,
-      },
+      players: { type: DataTypes.INTEGER, notNull: true },
+      publicQueue: { type: DataTypes.INTEGER, notNull: true },
+      reserveQueue: { type: DataTypes.INTEGER, notNull: true },
     });
 
     this.createModel(
       "SteamUser",
       {
-        steamID: {
-          type: DataTypes.STRING,
-          primaryKey: true,
-        },
-        lastName: {
-          type: DataTypes.STRING,
-        },
+        steamID: { type: DataTypes.STRING, primaryKey: true },
+        lastName: { type: DataTypes.STRING },
       },
-      {
-        charset: "utf8mb4",
-        collate: "utf8mb4_unicode_ci",
-      },
+      { charset: "utf8mb4", collate: "utf8mb4_unicode_ci" }
     );
 
     this.createModel(
       "Player",
       {
-        id: {
-          type: DataTypes.INTEGER,
-          primaryKey: true,
-          autoIncrement: true,
-        },
-        eosID: {
-          type: DataTypes.STRING,
-          unique: true,
-        },
-        steamID: {
-          type: DataTypes.STRING,
-          notNull: true,
-          unique: true,
-        },
-        lastName: {
-          type: DataTypes.STRING,
-        },
-        lastIP: {
-          type: DataTypes.STRING,
-        },
+        id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+        eosID: { type: DataTypes.STRING, unique: true },
+        steamID: { type: DataTypes.STRING, notNull: true, unique: true },
+        lastName: { type: DataTypes.STRING },
+        lastIP: { type: DataTypes.STRING },
       },
       {
         charset: "utf8mb4",
         collate: "utf8mb4_unicode_ci",
-        indexes: [
-          {
-            fields: ["eosID"],
-          },
-          {
-            fields: ["steamID"],
-          },
-        ],
-      },
+        indexes: [{ fields: ["eosID"] }, { fields: ["steamID"] }],
+      }
     );
 
+    // Wound, Death, Revive Models remain the same
     this.createModel(
       "Wound",
       {
-        id: {
-          type: DataTypes.INTEGER,
-          primaryKey: true,
-          autoIncrement: true,
-        },
-        time: {
-          type: DataTypes.DATE,
-          notNull: true,
-        },
-        victimName: {
-          type: DataTypes.STRING,
-        },
-        victimTeamID: {
-          type: DataTypes.INTEGER,
-        },
-        victimSquadID: {
-          type: DataTypes.INTEGER,
-        },
-        attackerName: {
-          type: DataTypes.STRING,
-        },
-        attackerTeamID: {
-          type: DataTypes.INTEGER,
-        },
-        attackerSquadID: {
-          type: DataTypes.INTEGER,
-        },
-        damage: {
-          type: DataTypes.FLOAT,
-        },
-        weapon: {
-          type: DataTypes.STRING,
-        },
-        teamkill: {
-          type: DataTypes.BOOLEAN,
-        },
+        id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+        time: { type: DataTypes.DATE, notNull: true },
+        victimName: { type: DataTypes.STRING },
+        victimTeamID: { type: DataTypes.INTEGER },
+        victimSquadID: { type: DataTypes.INTEGER },
+        attackerName: { type: DataTypes.STRING },
+        attackerTeamID: { type: DataTypes.INTEGER },
+        attackerSquadID: { type: DataTypes.INTEGER },
+        damage: { type: DataTypes.FLOAT },
+        weapon: { type: DataTypes.STRING },
+        teamkill: { type: DataTypes.BOOLEAN },
       },
-      {
-        charset: "utf8mb4",
-        collate: "utf8mb4_unicode_ci",
-      },
+      { charset: "utf8mb4", collate: "utf8mb4_unicode_ci" }
     );
 
     this.createModel(
       "Death",
       {
-        id: {
-          type: DataTypes.INTEGER,
-          primaryKey: true,
-          autoIncrement: true,
-        },
-        time: {
-          type: DataTypes.DATE,
-          notNull: true,
-        },
-        woundTime: {
-          type: DataTypes.DATE,
-        },
-        victimName: {
-          type: DataTypes.STRING,
-        },
-        victimTeamID: {
-          type: DataTypes.INTEGER,
-        },
-        victimSquadID: {
-          type: DataTypes.INTEGER,
-        },
-        attackerName: {
-          type: DataTypes.STRING,
-        },
-        attackerTeamID: {
-          type: DataTypes.INTEGER,
-        },
-        attackerSquadID: {
-          type: DataTypes.INTEGER,
-        },
-        damage: {
-          type: DataTypes.FLOAT,
-        },
-        weapon: {
-          type: DataTypes.STRING,
-        },
-        teamkill: {
-          type: DataTypes.BOOLEAN,
-        },
+        id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+        time: { type: DataTypes.DATE, notNull: true },
+        woundTime: { type: DataTypes.DATE },
+        victimName: { type: DataTypes.STRING },
+        victimTeamID: { type: DataTypes.INTEGER },
+        victimSquadID: { type: DataTypes.INTEGER },
+        attackerName: { type: DataTypes.STRING },
+        attackerTeamID: { type: DataTypes.INTEGER },
+        attackerSquadID: { type: DataTypes.INTEGER },
+        damage: { type: DataTypes.FLOAT },
+        weapon: { type: DataTypes.STRING },
+        teamkill: { type: DataTypes.BOOLEAN },
       },
-      {
-        charset: "utf8mb4",
-        collate: "utf8mb4_unicode_ci",
-      },
+      { charset: "utf8mb4", collate: "utf8mb4_unicode_ci" }
     );
 
     this.createModel(
       "Revive",
       {
-        id: {
-          type: DataTypes.INTEGER,
-          primaryKey: true,
-          autoIncrement: true,
-        },
-        time: {
-          type: DataTypes.DATE,
-          notNull: true,
-        },
-        woundTime: {
-          type: DataTypes.DATE,
-        },
-        victimName: {
-          type: DataTypes.STRING,
-        },
-        victimTeamID: {
-          type: DataTypes.INTEGER,
-        },
-        victimSquadID: {
-          type: DataTypes.INTEGER,
-        },
-        attackerName: {
-          type: DataTypes.STRING,
-        },
-        attackerTeamID: {
-          type: DataTypes.INTEGER,
-        },
-        attackerSquadID: {
-          type: DataTypes.INTEGER,
-        },
-        damage: {
-          type: DataTypes.FLOAT,
-        },
-        weapon: {
-          type: DataTypes.STRING,
-        },
-        teamkill: {
-          type: DataTypes.BOOLEAN,
-        },
-        reviverName: {
-          type: DataTypes.STRING,
-        },
-        reviverTeamID: {
-          type: DataTypes.INTEGER,
-        },
-        reviverSquadID: {
-          type: DataTypes.INTEGER,
-        },
+        id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+        time: { type: DataTypes.DATE, notNull: true },
+        woundTime: { type: DataTypes.DATE },
+        victimName: { type: DataTypes.STRING },
+        victimTeamID: { type: DataTypes.INTEGER },
+        victimSquadID: { type: DataTypes.INTEGER },
+        attackerName: { type: DataTypes.STRING },
+        attackerTeamID: { type: DataTypes.INTEGER },
+        attackerSquadID: { type: DataTypes.INTEGER },
+        damage: { type: DataTypes.FLOAT },
+        weapon: { type: DataTypes.STRING },
+        teamkill: { type: DataTypes.BOOLEAN },
+        reviverName: { type: DataTypes.STRING },
+        reviverTeamID: { type: DataTypes.INTEGER },
+        reviverSquadID: { type: DataTypes.INTEGER },
       },
-      {
-        charset: "utf8mb4",
-        collate: "utf8mb4_unicode_ci",
-      },
+      { charset: "utf8mb4", collate: "utf8mb4_unicode_ci" }
     );
 
-    this.models.Server.hasMany(this.models.TickRate, {
-      foreignKey: { name: "server", allowNull: false },
-      onDelete: "CASCADE",
-    });
-
-    this.models.Server.hasMany(this.models.PlayerCount, {
-      foreignKey: { name: "server", allowNull: false },
-      onDelete: "CASCADE",
-    });
-
-    this.models.Server.hasMany(this.models.Match, {
-      foreignKey: { name: "server", allowNull: false },
-      onDelete: "CASCADE",
-    });
-
-    this.models.Server.hasMany(this.models.Wound, {
-      foreignKey: { name: "server", allowNull: false },
-      onDelete: "CASCADE",
-    });
-
-    this.models.Server.hasMany(this.models.Death, {
-      foreignKey: { name: "server", allowNull: false },
-      onDelete: "CASCADE",
-    });
-
-    this.models.Server.hasMany(this.models.Revive, {
-      foreignKey: { name: "server", allowNull: false },
-      onDelete: "CASCADE",
-    });
-
-    this.models.Player.hasMany(this.models.Wound, {
-      sourceKey: "steamID",
-      foreignKey: { name: "attacker" },
-      onDelete: "CASCADE",
-    });
-
-    this.models.Player.hasMany(this.models.Wound, {
-      sourceKey: "steamID",
-      foreignKey: { name: "victim" },
-      onDelete: "CASCADE",
-    });
-
-    this.models.Player.hasMany(this.models.Death, {
-      sourceKey: "steamID",
-      foreignKey: { name: "attacker" },
-      onDelete: "CASCADE",
-    });
-
-    this.models.Player.hasMany(this.models.Death, {
-      sourceKey: "steamID",
-      foreignKey: { name: "victim" },
-      onDelete: "CASCADE",
-    });
-
-    this.models.Player.hasMany(this.models.Revive, {
-      sourceKey: "steamID",
-      foreignKey: { name: "attacker" },
-      onDelete: "CASCADE",
-    });
-
-    this.models.Player.hasMany(this.models.Revive, {
-      sourceKey: "steamID",
-      foreignKey: { name: "victim" },
-      onDelete: "CASCADE",
-    });
-
-    this.models.Player.hasMany(this.models.Revive, {
-      sourceKey: "steamID",
-      foreignKey: { name: "reviver" },
-      onDelete: "CASCADE",
-    });
-
-    this.models.Match.hasMany(this.models.TickRate, {
-      foreignKey: { name: "match" },
-      onDelete: "CASCADE",
-    });
-
-    this.models.Match.hasMany(this.models.PlayerCount, {
-      foreignKey: { name: "match" },
-      onDelete: "CASCADE",
-    });
-
-    this.models.Match.hasMany(this.models.Wound, {
-      foreignKey: { name: "match" },
-      onDelete: "CASCADE",
-    });
-
-    this.models.Match.hasMany(this.models.Death, {
-      foreignKey: { name: "match" },
-      onDelete: "CASCADE",
-    });
-
-    this.models.Match.hasMany(this.models.Revive, {
-      foreignKey: { name: "match" },
-      onDelete: "CASCADE",
-    });
+    // Set up associations
+    this.setupAssociations();
 
     this.onTickRate = this.onTickRate.bind(this);
     this.onUpdatedA2SInformation = this.onUpdatedA2SInformation.bind(this);
@@ -441,27 +173,98 @@ export default class DBLog extends BasePlugin {
     this.onPlayerWounded = this.onPlayerWounded.bind(this);
     this.onPlayerDied = this.onPlayerDied.bind(this);
     this.onPlayerRevived = this.onPlayerRevived.bind(this);
-    this.migrateSteamUsersIntoPlayers =
-      this.migrateSteamUsersIntoPlayers.bind(this);
-    this.dropAllForeignKeys = this.dropAllForeignKeys.bind(this);
   }
 
-  createModel(name, schema) {
-    this.models[name] = this.options.database.define(`DBLog_${name}`, schema, {
-      timestamps: false,
+  setupAssociations() {
+    const s = this.models.Server;
+    const p = this.models.Player;
+    const m = this.models.Match;
+
+    [
+      this.models.TickRate,
+      this.models.PlayerCount,
+      this.models.Match,
+      this.models.Wound,
+      this.models.Death,
+      this.models.Revive,
+    ].forEach((model) => {
+      s.hasMany(model, {
+        foreignKey: { name: "server", allowNull: false },
+        onDelete: "CASCADE",
+      });
+    });
+
+    [this.models.Wound, this.models.Death, this.models.Revive].forEach(
+      (model) => {
+        p.hasMany(model, {
+          sourceKey: "steamID",
+          foreignKey: { name: "attacker" },
+          onDelete: "CASCADE",
+        });
+        p.hasMany(model, {
+          sourceKey: "steamID",
+          foreignKey: { name: "victim" },
+          onDelete: "CASCADE",
+        });
+      }
+    );
+
+    p.hasMany(this.models.Revive, {
+      sourceKey: "steamID",
+      foreignKey: { name: "reviver" },
+      onDelete: "CASCADE",
+    });
+
+    [
+      this.models.TickRate,
+      this.models.PlayerCount,
+      this.models.Wound,
+      this.models.Death,
+      this.models.Revive,
+    ].forEach((model) => {
+      m.hasMany(model, { foreignKey: { name: "match" }, onDelete: "CASCADE" });
     });
   }
 
+  createModel(name, schema, options = {}) {
+    this.models[name] = this.options.database.define(
+      `DBLog_${name}`,
+      schema,
+      Object.assign({ timestamps: false }, options)
+    );
+  }
+
+  // HELPER: Replaces the unstable upsert logic for SQLite/Sequelize
+  async ensurePlayer(playerData, extra = {}) {
+    if (!playerData || !playerData.steamID) return null;
+
+    try {
+      const [player, created] = await this.models.Player.findOrCreate({
+        where: { steamID: playerData.steamID },
+        defaults: {
+          eosID: playerData.eosID,
+          lastName: playerData.name,
+          ...extra,
+        },
+      });
+
+      if (!created) {
+        await player.update({
+          eosID: playerData.eosID,
+          lastName: playerData.name,
+          ...extra,
+        });
+      }
+      return player;
+    } catch (e) {
+      this.verbose(1, `Error ensuring player ${playerData.steamID}:`, e);
+    }
+  }
+
   async prepareToMount() {
-    await this.models.Server.sync();
-    await this.models.Match.sync();
-    await this.models.TickRate.sync();
-    await this.models.PlayerCount.sync();
-    await this.models.SteamUser.sync();
-    await this.models.Player.sync();
-    await this.models.Wound.sync();
-    await this.models.Death.sync();
-    await this.models.Revive.sync();
+    for (const model of Object.values(this.models)) {
+      await model.sync();
+    }
   }
 
   async mount() {
@@ -490,7 +293,10 @@ export default class DBLog extends BasePlugin {
 
   async unmount() {
     this.server.removeEventListener("TICK_RATE", this.onTickRate);
-    this.server.removeEventListener("UPDATED_A2S_INFORMATION", this.onTickRate);
+    this.server.removeEventListener(
+      "UPDATED_A2S_INFORMATION",
+      this.onUpdatedA2SInformation
+    );
     this.server.removeEventListener("NEW_GAME", this.onNewGame);
     this.server.removeEventListener("PLAYER_CONNECTED", this.onPlayerConnected);
     this.server.removeEventListener("PLAYER_WOUNDED", this.onPlayerWounded);
@@ -525,7 +331,7 @@ export default class DBLog extends BasePlugin {
           server: this.options.overrideServerID || this.server.id,
           endTime: null,
         },
-      },
+      }
     );
 
     this.match = await this.models.Match.create({
@@ -540,28 +346,8 @@ export default class DBLog extends BasePlugin {
   }
 
   async onPlayerWounded(info) {
-    if (info.attacker)
-      await this.models.Player.upsert(
-        {
-          eosID: info.attacker.eosID,
-          steamID: info.attacker.steamID,
-          lastName: info.attacker.name,
-        },
-        {
-          conflictFields: ["steamID"],
-        },
-      );
-    if (info.victim)
-      await this.models.Player.upsert(
-        {
-          eosID: info.victim.eosID,
-          steamID: info.victim.steamID,
-          lastName: info.victim.name,
-        },
-        {
-          conflictFields: ["steamID"],
-        },
-      );
+    await this.ensurePlayer(info.attacker);
+    await this.ensurePlayer(info.victim);
 
     await this.models.Wound.create({
       server: this.options.overrideServerID || this.server.id,
@@ -582,28 +368,8 @@ export default class DBLog extends BasePlugin {
   }
 
   async onPlayerDied(info) {
-    if (info.attacker)
-      await this.models.Player.upsert(
-        {
-          eosID: info.attacker.eosID,
-          steamID: info.attacker.steamID,
-          lastName: info.attacker.name,
-        },
-        {
-          conflictFields: ["steamID"],
-        },
-      );
-    if (info.victim)
-      await this.models.Player.upsert(
-        {
-          eosID: info.victim.eosID,
-          steamID: info.victim.steamID,
-          lastName: info.victim.name,
-        },
-        {
-          conflictFields: ["steamID"],
-        },
-      );
+    await this.ensurePlayer(info.attacker);
+    await this.ensurePlayer(info.victim);
 
     await this.models.Death.create({
       server: this.options.overrideServerID || this.server.id,
@@ -625,39 +391,9 @@ export default class DBLog extends BasePlugin {
   }
 
   async onPlayerRevived(info) {
-    if (info.attacker)
-      await this.models.Player.upsert(
-        {
-          eosID: info.attacker.eosID,
-          steamID: info.attacker.steamID,
-          lastName: info.attacker.name,
-        },
-        {
-          conflictFields: ["steamID"],
-        },
-      );
-    if (info.victim)
-      await this.models.Player.upsert(
-        {
-          eosID: info.victim.eosID,
-          steamID: info.victim.steamID,
-          lastName: info.victim.name,
-        },
-        {
-          conflictFields: ["steamID"],
-        },
-      );
-    if (info.reviver)
-      await this.models.Player.upsert(
-        {
-          eosID: info.reviver.eosID,
-          steamID: info.reviver.steamID,
-          lastName: info.reviver.name,
-        },
-        {
-          conflictFields: ["steamID"],
-        },
-      );
+    await this.ensurePlayer(info.attacker);
+    await this.ensurePlayer(info.victim);
+    await this.ensurePlayer(info.reviver);
 
     await this.models.Revive.create({
       server: this.options.overrideServerID || this.server.id,
@@ -683,19 +419,10 @@ export default class DBLog extends BasePlugin {
   }
 
   async onPlayerConnected(info) {
-    await this.models.Player.upsert(
-      {
-        eosID: info.player.eosID,
-        steamID: info.player.steamID,
-        lastName: info.player.name,
-        lastIP: info.ip,
-      },
-      {
-        conflictFields: ["steamID"],
-      },
-    );
+    await this.ensurePlayer(info.player, { lastIP: info.ip });
   }
 
+  // Migration and Drop logic remains below
   async migrateSteamUsersIntoPlayers() {
     try {
       const steamUsersCount = await this.models.SteamUser.count();
@@ -704,7 +431,7 @@ export default class DBLog extends BasePlugin {
       if (steamUsersCount < playersCount) {
         this.verbose(
           1,
-          `Skipping migration from SteamUsers to Players due to a previous successful migration.`,
+          `Skipping migration from SteamUsers to Players due to a previous successful migration.`
         );
         return;
       }
@@ -712,7 +439,7 @@ export default class DBLog extends BasePlugin {
       await this.dropAllForeignKeys();
 
       const steamUsers = (await this.models.SteamUser.findAll()).map(
-        (u) => u.dataValues,
+        (u) => u.dataValues
       );
       await this.models.Player.bulkCreate(steamUsers);
 
@@ -720,7 +447,7 @@ export default class DBLog extends BasePlugin {
     } catch (error) {
       this.verbose(
         1,
-        `Error during Migration from SteamUsers to Players: ${error}`,
+        `Error during Migration from SteamUsers to Players: ${error}`
       );
     }
   }
@@ -728,7 +455,7 @@ export default class DBLog extends BasePlugin {
   async dropAllForeignKeys() {
     this.verbose(
       1,
-      `Starting to drop constraints on DB: ${this.options.database.config.database} related to DBLog_SteamUsers deptecated table.`,
+      `Starting to drop constraints on DB: ${this.options.database.config.database} related to DBLog_SteamUsers deprecated table.`
     );
 
     const isSQLite = this.options.database.getDialect() === "sqlite";
@@ -741,46 +468,28 @@ export default class DBLog extends BasePlugin {
         if (!isSQLite) {
           const result = await this.options.database.query(
             `SELECT * FROM information_schema.key_column_usage WHERE referenced_table_name IS NOT NULL AND table_schema = '${this.options.database.config.database}' AND table_name = '${tableName}';`,
-            { type: QueryTypes.SELECT },
+            { type: QueryTypes.SELECT }
           );
 
           for (const r of result) {
             if (r.REFERENCED_TABLE_NAME === "DBLog_SteamUsers") {
-              this.verbose(
-                1,
-                `Found constraint ${r.COLUMN_NAME} on table ${tableName}, referencing ${r.REFERENCED_COLUMN_NAME} on ${r.REFERENCED_TABLE_NAME}`,
-              );
-
               await this.options.database
                 .query(
                   `ALTER TABLE ${tableName} DROP FOREIGN KEY ${r.CONSTRAINT_NAME}`,
-                  {
-                    type: QueryTypes.RAW,
-                  },
+                  { type: QueryTypes.RAW }
                 )
-                .then(() => {
+                .catch((e) =>
                   this.verbose(
                     1,
-                    `Dropped foreign key ${r.COLUMN_NAME} on table ${tableName}`,
-                  );
-                  return undefined;
-                })
-                .catch((e) => {
-                  this.verbose(
-                    1,
-                    `Error dropping foreign key ${r.COLUMN_NAME} on table ${tableName}:`,
-                    e,
-                  );
-                });
+                    `Error dropping foreign key on ${tableName}:`,
+                    e
+                  )
+                );
             }
           }
         }
       } catch (error) {
-        this.verbose(
-          1,
-          `Error dropping foreign keys for table ${tableName}:`,
-          error,
-        );
+        this.verbose(1, `Error dropping foreign keys for ${tableName}:`, error);
       } finally {
         model.sync();
       }
