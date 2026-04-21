@@ -234,11 +234,44 @@ export default class DBLog extends BasePlugin {
     );
   }
 
+  // HELPER: Retry wrapper for handling SQLITE_BUSY and concurrent writes
+  async _executeWithRetry(logicFn, attempts = 5) {
+    const runAttempt = async () => {
+      for (let i = 0; i < attempts; i++) {
+        try {
+          return await logicFn();
+        } catch (err) {
+          const isLocked =
+            err.message &&
+            (err.message.includes('SQLITE_BUSY') ||
+              err.message.includes('database is locked') ||
+              err.name === 'SequelizeTimeoutError');
+          if (isLocked && i < attempts - 1) {
+            const jitter = Math.random() * 500;
+            await new Promise((resolve) => setTimeout(resolve, 200 + jitter));
+          } else {
+            throw err;
+          }
+        }
+      }
+    };
+
+    const db = this.options.database;
+    if (db && typeof db.getDialect === 'function' && db.getDialect() === 'sqlite') {
+      if (!db._squadjs_mutex) db._squadjs_mutex = Promise.resolve();
+      const resultPromise = db._squadjs_mutex.then(() => runAttempt());
+      db._squadjs_mutex = resultPromise.catch(() => {});
+      return resultPromise;
+    }
+
+    return runAttempt();
+  }
+
   // HELPER: Replaces the unstable upsert logic for SQLite/Sequelize
   async ensurePlayer(playerData, extra = {}) {
     if (!playerData || !playerData.steamID) return null;
 
-    try {
+    return this._executeWithRetry(async () => {
       const [player, created] = await this.models.Player.findOrCreate({
         where: { steamID: playerData.steamID },
         defaults: {
@@ -256,12 +289,17 @@ export default class DBLog extends BasePlugin {
         });
       }
       return player;
-    } catch (e) {
+    }).catch((e) => {
       this.verbose(1, `Error ensuring player ${playerData.steamID}:`, e);
-    }
+      return null;
+    });
   }
 
   async prepareToMount() {
+    if (this.options.database.getDialect() === 'sqlite') {
+      await this.options.database.query('PRAGMA journal_mode=WAL;');
+      await this.options.database.query('PRAGMA synchronous=NORMAL;');
+    }
     for (const model of Object.values(this.models)) {
       await model.sync();
     }
@@ -491,7 +529,7 @@ export default class DBLog extends BasePlugin {
       } catch (error) {
         this.verbose(1, `Error dropping foreign keys for ${tableName}:`, error);
       } finally {
-        model.sync();
+        await model.sync();
       }
     }
     await this.models.Player.sync();
