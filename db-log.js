@@ -272,23 +272,42 @@ export default class DBLog extends BasePlugin {
     if (!playerData || !playerData.steamID) return null;
 
     return this._executeWithRetry(async () => {
-      const [player, created] = await this.models.Player.findOrCreate({
-        where: { steamID: playerData.steamID },
-        defaults: {
-          eosID: playerData.eosID,
-          lastName: playerData.name,
-          ...extra,
-        },
-      });
-
-      if (!created) {
-        await player.update({
-          eosID: playerData.eosID,
-          lastName: playerData.name,
-          ...extra,
+      try {
+        const [player, created] = await this.models.Player.findOrCreate({
+          where: { steamID: playerData.steamID },
+          defaults: {
+            eosID: playerData.eosID,
+            lastName: playerData.name,
+            ...extra,
+          },
         });
+
+        if (!created) {
+          await player.update({
+            eosID: playerData.eosID,
+            lastName: playerData.name,
+            ...extra,
+          });
+        }
+        return player;
+      } catch (err) {
+        // Race condition: another concurrent call inserted the row just before us.
+        // Fall back to find + update. This handles all Sequelize dialects.
+        if (err.name === 'SequelizeUniqueConstraintError') {
+          const player = await this.models.Player.findOne({
+            where: { steamID: playerData.steamID },
+          });
+          if (player) {
+            await player.update({
+              eosID: playerData.eosID,
+              lastName: playerData.name,
+              ...extra,
+            });
+            return player;
+          }
+        }
+        throw err;
       }
-      return player;
     }).catch((e) => {
       this.verbose(1, `Error ensuring player ${playerData.steamID}:`, e);
       return null;
